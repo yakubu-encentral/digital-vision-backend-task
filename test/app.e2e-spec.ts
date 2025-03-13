@@ -4,7 +4,7 @@ import * as request from "supertest";
 import { App } from "supertest/types";
 import { AppModule } from "./../src/app.module";
 
-describe("AppController (e2e)", () => {
+describe("AppResolver (e2e)", () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
@@ -16,7 +16,13 @@ describe("AppController (e2e)", () => {
     await app.init();
   });
 
-  it("/ (GET)", () => {
-    return request(app.getHttpServer()).get("/").expect(200).expect("Hello World!");
+  it("/graphql (POST)", () => {
+    return request(app.getHttpServer())
+      .post("/graphql")
+      .send({ query: "{ hello }" })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.data.hello).toBe("Hello World!");
+      });
   });
 });
