@@ -15,6 +15,20 @@ import { UserModule } from "./user";
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), "src/schema.gql"),
       sortSchema: true,
+      formatError: (error) => {
+        const originalError = error.extensions?.originalError as any;
+
+        if (!originalError) {
+          return {
+            message: error.message,
+            code: error.extensions?.code,
+          };
+        }
+        return {
+          message: originalError.message,
+          code: error.extensions?.code,
+        };
+      },
     }),
     ConfigModule.forRoot({
       isGlobal: true,
