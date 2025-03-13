@@ -25,6 +25,7 @@ type Mutation {
   biometricLogin(input: BiometricLoginInput!): AuthResponse!
   login(input: LoginInput!): AuthResponse!
   register(input: RegisterInput!): AuthResponse!
+  updateBiometricKey(newBiometricKey: String!): User!
 }
 
 type Query {

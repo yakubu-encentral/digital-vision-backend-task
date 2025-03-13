@@ -144,4 +144,35 @@ describe("UserService", () => {
       );
     });
   });
+
+  // Test Biometric Key Update
+  describe("updateBiometricKey", () => {
+    it("should successfully update biometric key", async () => {
+      const userId = "1";
+      const newBiometricKey = "newBio456";
+      const updatedUser = {
+        id: userId,
+        email: "test@example.com",
+        biometricKey: newBiometricKey,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+      const result = await service.updateBiometricKey(userId, newBiometricKey);
+      expect(result).toEqual(updatedUser);
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: userId },
+        data: { biometricKey: newBiometricKey },
+      });
+    });
+
+    it("should throw BadRequestException if new biometric key already exists", async () => {
+      mockPrisma.user.update.mockRejectedValue({ code: "P2002" });
+      await expect(service.updateBiometricKey("1", "existingBio")).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
 });

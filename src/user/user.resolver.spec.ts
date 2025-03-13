@@ -1,9 +1,12 @@
+import { ExecutionContext, UnauthorizedException } from "@nestjs/common";
+import { GqlExecutionContext } from "@nestjs/graphql";
 import { Test, TestingModule } from "@nestjs/testing";
+import { JwtAuthGuard, JwtStrategy } from "../auth";
+import { PrismaService } from "../prisma";
 import { BiometricLoginInput, LoginInput, RegisterInput } from "./dto";
 import { AuthResponse, User } from "./entities";
 import { UserResolver } from "./user.resolver";
 import { UserService } from "./user.service";
-import { UnauthorizedException } from "@nestjs/common";
 
 describe("UserResolver", () => {
   let resolver: UserResolver;
@@ -34,7 +37,16 @@ describe("UserResolver", () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [UserResolver, { provide: UserService, useValue: mockUserService }],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({
+        canActivate: (context: ExecutionContext) => {
+          const ctx = GqlExecutionContext.create(context);
+          ctx.getContext().req.user = { id: "1", email: "test@example.com" };
+          return true;
+        },
+      })
+      .compile();
 
     resolver = module.get<UserResolver>(UserResolver);
     userService = module.get<UserService>(UserService);
@@ -90,6 +102,23 @@ describe("UserResolver", () => {
       const result = await resolver.biometricLogin(input);
       expect(result).toEqual(mockAuthResponse);
       expect(mockUserService.biometricLogin).toHaveBeenCalledWith(input);
+    });
+  });
+
+  // Test the updateBiometricKey mutation
+  describe("updateBiometricKey", () => {
+    it("should call userService.updateBiometricKey with user ID and new key", async () => {
+      const newBiometricKey = "newBio456";
+      const updatedUser = { ...mockUser, biometricKey: newBiometricKey };
+
+      // Mock the current user (simulating JWT guard)
+      const mockCurrentUser = { id: "1" };
+
+      mockUserService.updateBiometricKey.mockResolvedValue(updatedUser);
+
+      const result = await resolver.updateBiometricKey(mockCurrentUser, newBiometricKey);
+      expect(result).toEqual(updatedUser);
+      expect(mockUserService.updateBiometricKey).toHaveBeenCalledWith("1", newBiometricKey);
     });
   });
 });

@@ -83,4 +83,27 @@ export class UserService {
     const token = this.jwtService.sign({ userId: user.id });
     return { token, user };
   }
+
+  /**
+   * Updates the biometric key for an authenticated user.
+   * @param userId - ID of the user to update
+   * @param newBiometricKey - New biometric key value
+   * @returns Updated user data
+   * @throws BadRequestException if new biometric key already exists
+   */
+  async updateBiometricKey(userId: string, newBiometricKey: string) {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: { biometricKey: newBiometricKey },
+      });
+      return user;
+    } catch (error) {
+      // Handle unique constraint violation for biometric key
+      if (error.code === "P2002") {
+        throw new BadRequestException("Biometric key already exists");
+      }
+      throw error;
+    }
+  }
 }
