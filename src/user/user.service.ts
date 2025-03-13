@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../prisma/prisma.service";
+import { LoginInput } from "./dto";
 import { RegisterInput } from "./dto/register.input";
 
 @Injectable()
@@ -41,5 +42,28 @@ export class UserService {
 
       throw error;
     }
+  }
+
+  /**
+   * Authenticates a user using email and password.
+   * @param input - Login details (email, password)
+   * @returns AuthResponse with JWT token and user data
+   * @throws UnauthorizedException if credentials are invalid
+   */
+  async login(input: LoginInput) {
+    const { email, password } = input;
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
+
+    // Compare provided password with stored hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
+
+    const token = this.jwtService.sign({ userId: user.id });
+    return { token, user };
   }
 }

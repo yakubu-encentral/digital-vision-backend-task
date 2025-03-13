@@ -1,5 +1,5 @@
 import { Args, Mutation, Resolver } from "@nestjs/graphql";
-import { RegisterInput } from "./dto";
+import { LoginInput, RegisterInput } from "./dto";
 import { AuthResponse } from "./entities";
 import { UserService } from "./user.service";
 
@@ -19,5 +19,15 @@ export class UserResolver {
   @Mutation(() => AuthResponse)
   async register(@Args("input") input: RegisterInput) {
     return this.userService.register(input);
+  }
+
+  /**
+   * Authenticates a user using email and password.
+   * @param input - Login details (email, password)
+   * @returns AuthResponse containing JWT token and user data
+   */
+  @Mutation(() => AuthResponse)
+  async login(@Args("input") input: LoginInput) {
+    return this.userService.login(input);
   }
 }
