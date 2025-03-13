@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { RegisterInput } from "./dto";
+import { LoginInput, RegisterInput } from "./dto";
 import { AuthResponse, User } from "./entities";
 import { UserResolver } from "./user.resolver";
 import { UserService } from "./user.service";
@@ -58,6 +58,22 @@ describe("UserResolver", () => {
       const result = await resolver.register(input);
       expect(result).toEqual(mockAuthResponse);
       expect(mockUserService.register).toHaveBeenCalledWith(input);
+    });
+  });
+
+  // Test the login mutation
+  describe("login", () => {
+    it("should call userService.login and return AuthResponse", async () => {
+      const input: LoginInput = {
+        email: "test@example.com",
+        password: "password123",
+      };
+
+      mockUserService.login.mockResolvedValue(mockAuthResponse);
+
+      const result = await resolver.login(input);
+      expect(result).toEqual(mockAuthResponse);
+      expect(mockUserService.login).toHaveBeenCalledWith(input);
     });
   });
 });
