@@ -116,4 +116,32 @@ describe("UserService", () => {
       );
     });
   });
+
+  // Test Biometric Login
+  describe("biometricLogin", () => {
+    it("should successfully login with biometric key", async () => {
+      const input = { biometricKey: "bio123" };
+      const user = {
+        id: "1",
+        email: "test@example.com",
+        biometricKey: input.biometricKey,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue(user);
+
+      const result = await service.biometricLogin(input);
+      expect(result.token).toBe("mockToken");
+      expect(result.user).toEqual(user);
+      expect(mockJwt.sign).toHaveBeenCalledWith({ userId: user.id });
+    });
+
+    it("should throw UnauthorizedException if biometric key is invalid", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      await expect(service.biometricLogin({ biometricKey: "invalid" })).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
 });

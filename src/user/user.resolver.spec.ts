@@ -1,8 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { LoginInput, RegisterInput } from "./dto";
+import { BiometricLoginInput, LoginInput, RegisterInput } from "./dto";
 import { AuthResponse, User } from "./entities";
 import { UserResolver } from "./user.resolver";
 import { UserService } from "./user.service";
+import { UnauthorizedException } from "@nestjs/common";
 
 describe("UserResolver", () => {
   let resolver: UserResolver;
@@ -74,6 +75,21 @@ describe("UserResolver", () => {
       const result = await resolver.login(input);
       expect(result).toEqual(mockAuthResponse);
       expect(mockUserService.login).toHaveBeenCalledWith(input);
+    });
+  });
+
+  // Test the biometricLogin mutation
+  describe("biometricLogin", () => {
+    it("should call userService.biometricLogin and return AuthResponse", async () => {
+      const input: BiometricLoginInput = {
+        biometricKey: "bio123",
+      };
+
+      mockUserService.biometricLogin.mockResolvedValue(mockAuthResponse);
+
+      const result = await resolver.biometricLogin(input);
+      expect(result).toEqual(mockAuthResponse);
+      expect(mockUserService.biometricLogin).toHaveBeenCalledWith(input);
     });
   });
 });

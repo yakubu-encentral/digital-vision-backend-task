@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../prisma/prisma.service";
-import { LoginInput } from "./dto";
+import { BiometricLoginInput, LoginInput } from "./dto";
 import { RegisterInput } from "./dto/register.input";
 
 @Injectable()
@@ -61,6 +61,23 @@ export class UserService {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException("Invalid credentials");
+    }
+
+    const token = this.jwtService.sign({ userId: user.id });
+    return { token, user };
+  }
+
+  /**
+   * Authenticates a user using a biometric key (simulated as a string).
+   * @param input - Biometric login details (biometricKey)
+   * @returns AuthResponse with JWT token and user data
+   * @throws UnauthorizedException if biometric key is invalid
+   */
+  async biometricLogin(input: BiometricLoginInput) {
+    const { biometricKey } = input;
+    const user = await this.prisma.user.findUnique({ where: { biometricKey } });
+    if (!user) {
+      throw new UnauthorizedException("Invalid biometric key");
     }
 
     const token = this.jwtService.sign({ userId: user.id });

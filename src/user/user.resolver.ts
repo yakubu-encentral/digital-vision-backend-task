@@ -1,5 +1,5 @@
 import { Args, Mutation, Resolver } from "@nestjs/graphql";
-import { LoginInput, RegisterInput } from "./dto";
+import { BiometricLoginInput, LoginInput, RegisterInput } from "./dto";
 import { AuthResponse } from "./entities";
 import { UserService } from "./user.service";
 
@@ -29,5 +29,15 @@ export class UserResolver {
   @Mutation(() => AuthResponse)
   async login(@Args("input") input: LoginInput) {
     return this.userService.login(input);
+  }
+
+  /**
+   * Authenticates a user using a biometric key.
+   * @param input - Biometric login details (biometricKey)
+   * @returns AuthResponse containing JWT token and user data
+   */
+  @Mutation(() => AuthResponse)
+  async biometricLogin(@Args("input") input: BiometricLoginInput) {
+    return this.userService.biometricLogin(input);
   }
 }
