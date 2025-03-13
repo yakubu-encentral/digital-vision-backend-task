@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../prisma/prisma.service";
-import { LoginInput } from "./dto";
+import { BiometricLoginInput, LoginInput } from "./dto";
 import { RegisterInput } from "./dto/register.input";
 
 @Injectable()
@@ -65,5 +65,45 @@ export class UserService {
 
     const token = this.jwtService.sign({ userId: user.id });
     return { token, user };
+  }
+
+  /**
+   * Authenticates a user using a biometric key (simulated as a string).
+   * @param input - Biometric login details (biometricKey)
+   * @returns AuthResponse with JWT token and user data
+   * @throws UnauthorizedException if biometric key is invalid
+   */
+  async biometricLogin(input: BiometricLoginInput) {
+    const { biometricKey } = input;
+    const user = await this.prisma.user.findUnique({ where: { biometricKey } });
+    if (!user) {
+      throw new UnauthorizedException("Invalid biometric key");
+    }
+
+    const token = this.jwtService.sign({ userId: user.id });
+    return { token, user };
+  }
+
+  /**
+   * Updates the biometric key for an authenticated user.
+   * @param userId - ID of the user to update
+   * @param newBiometricKey - New biometric key value
+   * @returns Updated user data
+   * @throws BadRequestException if new biometric key already exists
+   */
+  async updateBiometricKey(userId: string, newBiometricKey: string) {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: { biometricKey: newBiometricKey },
+      });
+      return user;
+    } catch (error) {
+      // Handle unique constraint violation for biometric key
+      if (error.code === "P2002") {
+        throw new BadRequestException("Biometric key already exists");
+      }
+      throw error;
+    }
   }
 }

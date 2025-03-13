@@ -7,6 +7,10 @@ type AuthResponse {
   user: User!
 }
 
+input BiometricLoginInput {
+  biometricKey: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -18,8 +22,10 @@ input LoginInput {
 }
 
 type Mutation {
+  biometricLogin(input: BiometricLoginInput!): AuthResponse!
   login(input: LoginInput!): AuthResponse!
   register(input: RegisterInput!): AuthResponse!
+  updateBiometricKey(newBiometricKey: String!): User!
 }
 
 type Query {

@@ -1,6 +1,8 @@
+import { UseGuards } from "@nestjs/common";
 import { Args, Mutation, Resolver } from "@nestjs/graphql";
-import { LoginInput, RegisterInput } from "./dto";
-import { AuthResponse } from "./entities";
+import { CurrentUser, JwtAuthGuard } from "../auth";
+import { BiometricLoginInput, LoginInput, RegisterInput } from "./dto";
+import { AuthResponse, User } from "./entities";
 import { UserService } from "./user.service";
 
 /**
@@ -29,5 +31,31 @@ export class UserResolver {
   @Mutation(() => AuthResponse)
   async login(@Args("input") input: LoginInput) {
     return this.userService.login(input);
+  }
+
+  /**
+   * Authenticates a user using a biometric key.
+   * @param input - Biometric login details (biometricKey)
+   * @returns AuthResponse containing JWT token and user data
+   */
+  @Mutation(() => AuthResponse)
+  async biometricLogin(@Args("input") input: BiometricLoginInput) {
+    return this.userService.biometricLogin(input);
+  }
+
+  /**
+   * Updates the biometric key for the authenticated user.
+   * @param user - The authenticated user (from JWT)
+   * @param newBiometricKey - The new biometric key to set
+   * @returns Updated user data
+   * @protected Requires JWT authentication
+   */
+  @Mutation(() => User)
+  @UseGuards(JwtAuthGuard) // Ensures the user is authenticated
+  async updateBiometricKey(
+    @CurrentUser() user: any, // Retrieves the user from the request context
+    @Args("newBiometricKey") newBiometricKey: string,
+  ) {
+    return this.userService.updateBiometricKey(user.id, newBiometricKey);
   }
 }

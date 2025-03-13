@@ -1,9 +1,12 @@
 import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
+import { PassportModule } from "@nestjs/passport";
+import { JwtStrategy } from "./strategies";
 
 @Module({
   imports: [
+    PassportModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
@@ -12,5 +15,6 @@ import { JwtModule } from "@nestjs/jwt";
       }),
     }),
   ],
+  providers: [JwtStrategy],
 })
 export class AuthModule {}
