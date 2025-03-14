@@ -1,8 +1,7 @@
-import { ExecutionContext, UnauthorizedException } from "@nestjs/common";
+import { ExecutionContext } from "@nestjs/common";
 import { GqlExecutionContext } from "@nestjs/graphql";
 import { Test, TestingModule } from "@nestjs/testing";
-import { JwtAuthGuard, JwtStrategy } from "../auth";
-import { PrismaService } from "../prisma";
+import { JwtAuthGuard } from "../auth";
 import { BiometricLoginInput, LoginInput, RegisterInput } from "./dto";
 import { AuthResponse, User } from "./entities";
 import { UserResolver } from "./user.resolver";
