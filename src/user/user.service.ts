@@ -4,6 +4,7 @@ import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../prisma/prisma.service";
 import { BiometricLoginInput, LoginInput } from "./dto";
 import { RegisterInput } from "./dto/register.input";
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class UserService {
@@ -36,7 +37,7 @@ export class UserService {
       return { token, user };
     } catch (error) {
       // Handle unique constraint violations (e.g., duplicate email or biometric key)
-      if (error.code === "P2002") {
+      if ((<Prisma.PrismaClientKnownRequestError>error).code === "P2002") {
         throw new BadRequestException("Email or biometric key already exists");
       }
 
@@ -97,12 +98,14 @@ export class UserService {
         where: { id: userId },
         data: { biometricKey: newBiometricKey },
       });
+
       return user;
     } catch (error) {
       // Handle unique constraint violation for biometric key
-      if (error.code === "P2002") {
+      if ((<Prisma.PrismaClientKnownRequestError>error).code === "P2002") {
         throw new BadRequestException("Biometric key already exists");
       }
+
       throw error;
     }
   }

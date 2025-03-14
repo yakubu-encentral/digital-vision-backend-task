@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { INestApplication } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import * as request from "supertest";
@@ -8,10 +9,7 @@ describe("App (e2e)", () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let server: any;
-
-  // GraphQL query/mutation helper
-  const gqlRequest = (query: string) =>
-    request(server).post("/graphql").send({ query }).set("Accept", "application/json");
+  let gqlRequest: (query: string) => request.Test;
 
   // Setup before all tests
   beforeAll(async () => {
@@ -23,6 +21,10 @@ describe("App (e2e)", () => {
     prisma = app.get<PrismaService>(PrismaService);
     await app.init();
     server = app.getHttpServer();
+
+    // GraphQL query/mutation helper
+    gqlRequest = (query: string) =>
+      request(server).post("/graphql").send({ query }).set("Accept", "application/json");
 
     // Clean the database before tests
     await prisma.user.deleteMany({});

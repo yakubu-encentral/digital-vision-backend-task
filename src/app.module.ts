@@ -2,6 +2,7 @@ import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { GraphQLModule } from "@nestjs/graphql";
+import { GraphQLFormattedError } from "graphql";
 import { join } from "path";
 import { AppResolver } from "./app.resolver";
 import { AppService } from "./app.service";
@@ -15,19 +16,14 @@ import { UserModule } from "./user";
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), "src/schema.gql"),
       sortSchema: true,
-      context: ({ req }) => ({ req }), // Pass the request object to the context
-      formatError: (error) => {
-        const originalError = error.extensions?.originalError as any;
+      formatError: (error: GraphQLFormattedError): GraphQLFormattedError => {
+        const originalError = error.extensions?.originalError as Error | undefined;
 
-        if (!originalError) {
-          return {
-            message: error.message,
-            code: error.extensions?.code,
-          };
-        }
         return {
-          message: originalError.message,
-          code: error.extensions?.code,
+          message: originalError?.message ?? error.message,
+          extensions: {
+            code: error.extensions?.code,
+          },
         };
       },
     }),

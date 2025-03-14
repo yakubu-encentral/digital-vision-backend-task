@@ -1,6 +1,8 @@
+/* eslint-disable */
 import { ExecutionContext } from "@nestjs/common";
 import { GqlExecutionContext } from "@nestjs/graphql";
 import { Test, TestingModule } from "@nestjs/testing";
+import { Request } from "express";
 import { JwtAuthGuard } from "../auth";
 import { BiometricLoginInput, LoginInput, RegisterInput } from "./dto";
 import { AuthResponse, User } from "./entities";
@@ -41,7 +43,7 @@ describe("UserResolver", () => {
       .useValue({
         canActivate: (context: ExecutionContext) => {
           const ctx = GqlExecutionContext.create(context);
-          ctx.getContext().req.user = { id: "1", email: "test@example.com" };
+          ctx.getContext<{ req: Request }>().req.user = { id: "1", email: "test@example.com" };
           return true;
         },
       })
@@ -111,7 +113,12 @@ describe("UserResolver", () => {
       const updatedUser = { ...mockUser, biometricKey: newBiometricKey };
 
       // Mock the current user (simulating JWT guard)
-      const mockCurrentUser = { id: "1" };
+      const mockCurrentUser: User = {
+        id: "1",
+        email: "test@example.com",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
       mockUserService.updateBiometricKey.mockResolvedValue(updatedUser);
 
