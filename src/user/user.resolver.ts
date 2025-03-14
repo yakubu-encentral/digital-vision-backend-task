@@ -53,7 +53,7 @@ export class UserResolver {
   @Mutation(() => User)
   @UseGuards(JwtAuthGuard) // Ensures the user is authenticated
   async updateBiometricKey(
-    @CurrentUser() user: any, // Retrieves the user from the request context
+    @CurrentUser() user: User, // Retrieves the user from the request context
     @Args("newBiometricKey") newBiometricKey: string,
   ) {
     return this.userService.updateBiometricKey(user.id, newBiometricKey);
