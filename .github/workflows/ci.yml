@@ -8,26 +8,55 @@ on:
 
 jobs:
   build:
+    # Use the latest Ubuntu runner
     runs-on: ubuntu-latest
 
+    # Set up a PostgreSQL service container
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: dbname
+        ports:
+          - 5432:5432
+        # Ensure the database is healthy before proceeding
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
+      # Checkout the repository code
       - uses: actions/checkout@v4
 
+      # Set up Node.js environment
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "18"
 
+          # Install project dependencies
       - name: Install dependencies
         run: npm ci
 
       - name: Run lint
         run: npm run lint
 
+        # Set environment variables for the application
+      - name: Set up environment variables
+        run: |
+          echo "DATABASE_URL=postgresql://user:password@localhost:5432/dbname?schema=public" >> $GITHUB_ENV
+          echo "JWT_SECRET=0v+71Ssy7Rjy1bfcnzrL/1WO/YVzRcRjZ/pQJubBTbA=" >> $GITHUB_ENV
+
+        # Apply Prisma migrations to set up the database schema
+      - name: Apply Prisma migrations
+        run: npx prisma migrate deploy
+
       - name: Run tests
         run: npm run test
 
       - name: Run e2e tests
-        env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: npm run test:e2e
